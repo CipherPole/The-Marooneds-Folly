@@ -19,10 +19,9 @@ jobs:
       - name: Create or update PR
         uses: actions/github-script@v7
         with:
-          # Use a Personal Access Token stored in repository secrets named PR_TOKEN.
-          # This avoids the repository-level restriction that can prevent the built-in GITHUB_TOKEN
-          # from creating or approving pull requests.
-          github-token: ${{ secrets.PR_TOKEN }}
+          # Use PR_TOKEN (PAT) if configured, otherwise fall back to the built-in github.token.
+          # This prevents the action from failing when PR_TOKEN is not set.
+          github-token: ${{ secrets.PR_TOKEN || github.token }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
