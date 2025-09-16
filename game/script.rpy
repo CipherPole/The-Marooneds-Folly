@@ -5,6 +5,9 @@
 
 define e = Character("Eileen")
 
+# Player name variable with a default value.
+default player_name = "Player"
+
 
 # The game starts here.
 
@@ -22,7 +25,18 @@ label start:
 
     show eileen happy
 
-    # These display lines of dialogue.
+    # Ask the player for their name before dialogue starts.
+    $ player_name_input = renpy.input("What's your name?", default=player_name)
+    # Simple sanitization: strip whitespace and prevent empty names.
+    $ player_name_input = player_name_input.strip()
+    if player_name_input == "":
+        $ player_name = player_name
+    else:
+        $ player_name = player_name_input
+
+    # These display lines of dialogue. Eileen will use the entered name.
+
+    e "Nice to meet you, [player_name]."
 
     e "You've created a new Ren'Py game."
 
