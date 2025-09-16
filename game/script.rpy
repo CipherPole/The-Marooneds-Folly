@@ -38,9 +38,9 @@ label start:
 
     e "Nice to meet you, [player_name]."
 
-    e "You've created a new Ren'Py game."
+    e "You've created a new Ren'Py game, [player_name]."
 
-    e "Once you add a story, pictures, and music, you can release it to the world!"
+    e "Once you add a story, pictures, and music, you can release it to the world, [player_name]!"
 
     # This ends the game.
 
