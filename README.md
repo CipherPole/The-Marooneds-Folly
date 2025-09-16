@@ -95,4 +95,14 @@ If you see the error "GitHub Actions is not permitted to create or approve pull 
 
 With `PR_TOKEN` set, the workflows will use that token to create and merge PRs.
 
+### Discord notifications
+
+You can receive repository notifications in Discord. To enable this, add a repository secret named `DISCORD_WEBHOOK` (Settings → Secrets and variables → Actions → New repository secret) and paste the webhook URL as the value.
+
+The repository includes a workflow `discord-notify.yml` which will post messages to that webhook when:
+- a push happens on any branch (reports branch, author and commit link)
+- a pull request is merged (reports title, author, merged by, and PR link)
+
+Note: For security, add the webhook as a secret rather than placing it directly in the repo. If you'd like, I can add the webhook secret for you if you paste the webhook here (but keep in mind chat is not a secure channel; it's safer to add it manually in the GitHub UI).
+
 
