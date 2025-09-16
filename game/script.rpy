@@ -8,6 +8,9 @@ define e = Character("Eileen")
 # Player name variable with a default value.
 default player_name = "Player"
 
+init python:
+    import random
+
 
 # The game starts here.
 
@@ -42,6 +45,89 @@ label start:
 
     e "Once you add a story, pictures, and music, you can release it to the world, [player_name]!"
 
+    # After Eileen speaks, let the player choose whether to investigate.
+    menu:
+        "Investigate the noise":
+            e "Alright, let's check it out. Stay close, [player_name]."
+            jump combat
+
+        "Ignore it and continue":
+            e "Maybe it's nothing. Let's keep going."
+            # Continue the story here (falls through to return)
+
     # This ends the game.
 
     return
+
+
+label combat:
+
+    # Simple stats
+    $ player_hp = 30
+    $ enemy_hp = 20
+    $ enemy_name = "Skulking Raider"
+
+    scene bg room
+    show eileen angry
+
+    e "Wait... did you hear that, [player_name]? Something's coming..."
+
+    "A wild [enemy_name] appears!"
+
+    label combat_loop:
+        "Player HP: [player_hp]    [enemy_name] HP: [enemy_hp]"
+
+        menu:
+            "Attack":
+                $ dmg = random.randint(4,8)
+                $ enemy_hp -= dmg
+                "You attack the [enemy_name] for [dmg] damage."
+                if enemy_hp <= 0:
+                    jump combat_win
+                # Enemy retaliates
+                $ edmg = random.randint(3,7)
+                $ player_hp -= edmg
+                "The [enemy_name] strikes back for [edmg] damage."
+                if player_hp <= 0:
+                    jump combat_lose
+                jump combat_loop
+
+            "Defend":
+                $ reduced = random.randint(1,4)
+                $ edmg = max(0, random.randint(3,7) - reduced)
+                $ player_hp -= edmg
+                "You brace yourself and reduce incoming damage by [reduced]."
+                "The [enemy_name] deals [edmg] damage."
+                if player_hp <= 0:
+                    jump combat_lose
+                jump combat_loop
+
+            "Run":
+                $ chance = random.random()
+                if chance < 0.5:
+                    "You fail to escape! The [enemy_name] attacks."
+                    $ edmg = random.randint(3,7)
+                    $ player_hp -= edmg
+                    if player_hp <= 0:
+                        jump combat_lose
+                    jump combat_loop
+                else:
+                    "You successfully escape the encounter."
+                    jump combat_end
+
+    label combat_win:
+        "You defeated the [enemy_name]!"
+        $ reward = random.randint(5,12)
+        "You find [reward] gold on the foe."
+        jump combat_end
+
+    label combat_lose:
+        "You collapse from your wounds..."
+        scene black
+        centered "You have been defeated."
+        return
+
+    label combat_end:
+        show eileen normal
+        e "That was close, [player_name]. Are you alright?"
+        return
