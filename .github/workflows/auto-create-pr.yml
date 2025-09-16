@@ -1,0 +1,42 @@
+name: Auto-create PR for feature branches
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  create_pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create or update PR
+        uses: actions/github-script@v7
+        with:
+          # Use PR_TOKEN (PAT) if configured, otherwise fall back to the built-in github.token.
+          # This prevents the action from failing when PR_TOKEN is not set.
+          github-token: ${{ secrets.PR_TOKEN || github.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const head = context.ref.replace('refs/heads/','');
+            const base = 'main';
+            const title = `Auto PR from ${head}`;
+            const body = `This pull request was automatically created from branch **${head}**.`;
+
+            // Check for existing open PR from this head
+            const { data: existing } = await github.rest.pulls.list({ owner, repo, head: `${owner}:${head}`, base, state: 'open' });
+            if (existing.length > 0) {
+              core.info(`Found existing PR: ${existing[0].html_url}`);
+              return existing[0].html_url;
+            }
+
+            const { data: pr } = await github.rest.pulls.create({ owner, repo, head, base, title, body });
+            core.info(`Created PR: ${pr.html_url}`);
+            return pr.html_url;
