@@ -105,4 +105,8 @@ The repository includes a workflow `discord-notify.yml` which will post messages
 
 Note: For security, add the webhook as a secret rather than placing it directly in the repo. If you'd like, I can add the webhook secret for you if you paste the webhook here (but keep in mind chat is not a secure channel; it's safer to add it manually in the GitHub UI).
 
+Update checker notes:
+- The game now performs a light-weight check of the `main` branch at startup and will notify players non-intrusively if a new commit is detected.
+- The last-seen SHA is stored in `.last_main_sha`, which is ignored by `.gitignore` so it won't be committed.
+
 

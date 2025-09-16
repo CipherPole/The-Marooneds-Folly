@@ -67,15 +67,13 @@ label start:
             last_sha = None
 
     if remote_sha and last_sha and remote_sha != last_sha:
-        e "Heads up — there's a new update on the project's main branch."
-        menu:
-            "Open changelist in browser":
-                $ renpy.open_url(remote_url)
-            "Ignore for now":
-                pass
+        # Non-blocking notification. Players can click the notification to open the URL.
+        $ renpy.notify("Update available: click to view changelist")
+        # Provide a clickable link in the log for convenience.
+        $ renpy.open_url(remote_url)  # This will open immediately; if you'd prefer not to open automatically, remove this line.
     elif remote_sha and not last_sha:
-        # First time seeing a SHA; store it.
-        $ renpy.say(None, "Update check complete.")
+        # First time seeing a SHA; store it quietly.
+        pass
 
     python:
         try:
