@@ -70,3 +70,20 @@ Open a Pull Request on GitHub to merge changes into `main`. Use PRs for review a
 
 If the repository is private, invite collaborators under Settings → Manage access. For very large binary assets, consider Git LFS (ask if you need help setting it up).
 
+## Automation: auto-PR and auto-merge
+
+This repository includes two GitHub Actions workflows to streamline collaboration:
+
+- `auto-create-pr.yml`: when anyone pushes to a branch matching `feature/**`, a pull request will be automatically created targeting `main` (if one doesn't already exist).
+- `auto-merge-pr.yml`: when a pull request is labeled `automerge`, the PR will be automatically merged using squash merge.
+
+How to use:
+- Push your changes to a branch named `feature/<something>`.
+- A PR will be created automatically. Review it on GitHub.
+- If everything looks good, add the label `automerge` to the PR and the workflow will merge it.
+
+Security and notes:
+- The workflows use the built-in `GITHUB_TOKEN`. This token has limited permissions and cannot create or manage secrets. Review workflow logs and PRs before merging automatically.
+- If you want stricter rules (e.g., require approvals, CI checks), update the workflow or add branch protection rules in GitHub Settings.
+
+
