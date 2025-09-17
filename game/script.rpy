@@ -8,6 +8,20 @@ define e = Character("Eileen")
 # Player name variable with a default value.
 default player_name = "Player"
 
+# Player attributes and equipment defaults
+default player_stats = {
+    'HP': 30,
+    'STR': 6,
+    'DEF': 4,
+    'AGI': 5,
+}
+
+default player_equipment = {
+    'Weapon': 'Rusty Sword',
+    'Armor': 'Worn Tunic',
+    'Accessory': 'Lucky Coin',
+}
+
 init python:
     import random
 
@@ -116,9 +130,11 @@ label start:
 
 
 label combat:
+    # Prepare the player and show the preparation screen
+    call combat_prep
 
-    # Simple stats
-    $ player_hp = 30
+    # Simple stats (start from player_stats so values carry over)
+    $ player_hp = player_stats['HP']
     $ enemy_hp = 20
     $ enemy_name = "Skulking Raider"
 
@@ -186,3 +202,25 @@ label combat:
         show eileen normal
         e "That was close, [player_name]. Are you alright?"
         return
+
+
+label combat_prep:
+    # Display a simple preparation screen showing player attributes and equipment.
+    scene bg room
+    show eileen normal
+
+    e "Prepare yourself, [player_name]. Here are your current stats:"
+
+    # Display stats
+    "HP: [player_stats['HP']]  STR: [player_stats['STR']]  DEF: [player_stats['DEF']]  AGI: [player_stats['AGI']]"
+
+    e "Equipped: [player_equipment['Weapon']], [player_equipment['Armor']], [player_equipment['Accessory']]"
+
+    menu:
+        "Ready - enter the fight":
+            e "Let's do this!"
+            return
+
+        "Adjust equipment (not implemented)":
+            e "You'll have to check your inventory later."
+            return
