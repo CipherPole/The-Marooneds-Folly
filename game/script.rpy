@@ -22,6 +22,68 @@ default player_equipment = {
     'Accessory': 'Lucky Coin',
 }
 
+# Keep an immutable base for recalculation when equipment changes
+default player_base_stats = {
+    'HP': 30,
+    'STR': 6,
+    'DEF': 4,
+    'AGI': 5,
+}
+
+# An inventory of period-appropriate (circa 1650) weapons and equipment.
+# Each item has a type, a name, a modifiers dict, and an owned flag.
+default inventory = [
+    { 'type': 'Weapon', 'name': 'Rapier', 'mod': {'STR': 2, 'AGI': 1}, 'owned': True, 'desc': 'A light thrusting sword, common for duels.' },
+    { 'type': 'Weapon', 'name': 'Broadsword', 'mod': {'STR': 3, 'AGI': -1}, 'owned': True, 'desc': 'A heavy cutting sword favored by soldiers.' },
+    { 'type': 'Weapon', 'name': 'Cutlass', 'mod': {'STR': 2, 'AGI': 0}, 'owned': True, 'desc': 'A short, sturdy blade useful in close combat.' },
+    { 'type': 'Weapon', 'name': 'Matchlock Musket', 'mod': {'STR': 4, 'AGI': -2, 'DEF': -1}, 'owned': False, 'desc': 'A slow-firing firearm; powerful but cumbersome.' },
+    { 'type': 'Weapon', 'name': 'Pike', 'mod': {'STR': 3, 'AGI': -2}, 'owned': False, 'desc': 'A long pole weapon effective against cavalry.' },
+
+    { 'type': 'Armor', 'name': 'Worn Tunic', 'mod': {'DEF': 0}, 'owned': True, 'desc': 'Simple cloth clothing offering no protection.' },
+    { 'type': 'Armor', 'name': 'Leather Jerkin', 'mod': {'DEF': 1, 'AGI': 0}, 'owned': True, 'desc': 'Padded leather offering light protection.' },
+    { 'type': 'Armor', 'name': 'Brigandine', 'mod': {'DEF': 3, 'AGI': -1}, 'owned': False, 'desc': 'Layered plates riveted inside fabric for solid defense.' },
+    { 'type': 'Armor', 'name': 'Breastplate', 'mod': {'DEF': 4, 'AGI': -2}, 'owned': False, 'desc': 'Solid metal plate protecting the torso.' },
+
+    { 'type': 'Accessory', 'name': 'Lucky Coin', 'mod': {'AGI': 1}, 'owned': True, 'desc': 'A small charm believed to bring fortune.' },
+    { 'type': 'Accessory', 'name': 'Powder Horn', 'mod': {'STR': 1}, 'owned': False, 'desc': 'Used to carry powder; useful if you use a musket.' },
+    { 'type': 'Accessory', 'name': 'Signet Ring', 'mod': {'DEF': 0}, 'owned': True, 'desc': 'A decorative ring, some say it grants resolve.' },
+]
+
+init python:
+    import renpy
+
+    def find_item_by_name(name):
+        for it in inventory:
+            if it['name'] == name:
+                return it
+        return None
+
+    def recalc_player_stats():
+        # Start from the base stats
+        new = dict(player_base_stats)
+        # Apply currently equipped items' modifiers
+        for slot, iname in player_equipment.items():
+            it = find_item_by_name(iname)
+            if it and 'mod' in it:
+                for k, v in it['mod'].items():
+                    new[k] = new.get(k, 0) + v
+        # Update the mutable player_stats mapping in-place
+        for k in new:
+            player_stats[k] = new[k]
+
+    def equip_item(item_name):
+        it = find_item_by_name(item_name)
+        if not it:
+            return
+        # Only allow equipping items the player owns
+        if not it.get('owned', False):
+            renpy.notify("You don't own that item.")
+            return
+        player_equipment[it['type']] = it['name']
+        recalc_player_stats()
+        renpy.notify(f"Equipped {it['name']}.")
+
+
 init python:
     import random
 
