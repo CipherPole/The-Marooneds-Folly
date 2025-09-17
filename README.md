@@ -2,6 +2,15 @@
 
 This repository contains a Ren'Py visual novel project.
 
+Prerequisites
+-------------
+
+- Ren'Py: Download and install Ren'Py to run the game locally: https://www.renpy.org/
+- Git: Install Git to clone, push, and collaborate: https://git-scm.com/downloads
+- (Optional) GitHub CLI: https://cli.github.com/
+
+Make sure Ren'Py is installed before attempting to run the project—open the Ren'Py launcher, add this folder as a project (or point it at the parent folder), and run.
+
 What's included
 - game/ - Ren'Py scripts, assets, and localization.
 - gui/, audio/, images/ - project assets used by the game.
