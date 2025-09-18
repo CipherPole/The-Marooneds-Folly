@@ -2,7 +2,7 @@ name: Lint — GitHub Actions & YAML (branch-only)
 
 on:
   push:
-    branches: [ feature/add-player-name ]
+    branches: [ 'feature/**' ]
 
 jobs:
   super-lint:
@@ -17,5 +17,5 @@ jobs:
         env:
           VALIDATE_YAML: true
           VALIDATE_GITHUB_ACTIONS: true
-          FILTER_REGEX_EXCLUDE: '^(?!\.github/workflows/).*'
+          FILTER_REGEX_EXCLUDE: "^(?!\\.github/workflows/).*"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
