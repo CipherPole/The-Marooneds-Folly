@@ -1,5 +1,9 @@
 name: CI — Ren'Py build (Linux + Windows)
 
+permissions:
+  contents: write
+  issues: write
+
 on:
   push:
     branches: [ main, 'feature/**' ]
@@ -39,12 +43,18 @@ jobs:
           curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
           mkdir renpy-sdk
           tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+          
+        - name: SDK contents (diagnostic)
+          run: |
+            echo "Ren'Py SDK top-level contents:"; ls -la renpy-sdk || true
+            echo "SDK renpy.sh present:"; test -f renpy-sdk/renpy.sh && echo yes || echo no
 
       - name: Run headless build (Linux)
         working-directory: renpy-sdk
         run: |
           PROJECT_DIR="${{ github.workspace }}"
-          ./renpy.sh build "$PROJECT_DIR"
+            echo "Running renpy --version"; ./renpy.sh --version || true
+            echo "Invoking headless build"; ./renpy.sh build "$PROJECT_DIR"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -84,13 +94,20 @@ jobs:
           if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
             Move-Item -Path (Join-Path renpy-sdk $entries[0].Name)\* -Destination renpy-sdk
           }
+          
+        - name: SDK contents (diagnostic)
+          shell: pwsh
+          run: |
+            Write-Output "Ren'Py SDK top-level contents:"; Get-ChildItem renpy-sdk -Force
+            Write-Output "Is renpy.exe present?"; if (Test-Path renpy-sdk\renpy.exe) { Write-Output 'yes' } else { Write-Output 'no' }
 
       - name: Run headless build (Windows)
         shell: pwsh
         run: |
           $project = "${{ github.workspace }}"
-          $renpy = Join-Path $PWD 'renpy-sdk' 'renpy.exe'
-          & $renpy build $project
+            $renpy = Join-Path $PWD 'renpy-sdk' 'renpy.exe'
+            Write-Output "Attempting renpy.exe --version"; & $renpy --version || Write-Output 'version-check-failed'
+            Write-Output "Invoking headless build"; & $renpy build $project
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -124,6 +141,8 @@ jobs:
             Ref: ${{ github.ref }}
             Commit: ${{ github.sha }}
           files: artifacts/**
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     name: Notify on failure
