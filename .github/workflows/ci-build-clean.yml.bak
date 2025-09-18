@@ -1,0 +1,176 @@
+name: CI — Ren'Py build (Linux + Windows) (clean)
+
+permissions:
+  contents: write
+  issues: write
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SDK_VERSION: '8.4.1'
+
+jobs:
+  build-linux:
+    name: Build (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: cache-linux
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          echo "Downloading $SDK_URL"
+          curl -sSL "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir -p renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+      - name: "SDK diagnostic (linux)"
+        run: |
+          echo "SDK listing:"; ls -la renpy-sdk || true
+          echo "renpy.sh exists:"; test -f renpy-sdk/renpy.sh && echo yes || echo no
+
+      - name: "Run headless build (Linux) and capture logs"
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+          ./renpy.sh --version || true
+          ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build_linux.log
+
+      - name: Upload linux build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-build-log-linux
+          path: renpy_build_linux.log
+
+      - name: Upload linux dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist-linux
+          path: renpy-sdk/dist/**
+
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: cache-windows
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $sdkUrl = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+          Write-Output "Downloading $sdkUrl"
+          Invoke-WebRequest -Uri $sdkUrl -OutFile renpy-sdk.zip
+          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+          $entries = Get-ChildItem renpy-sdk
+          if ($entries.Count -eq 1 -and (Test-Path (Join-Path renpy-sdk $entries[0].Name))) {
+            Move-Item -Path (Join-Path renpy-sdk $entries[0].Name '*') -Destination renpy-sdk -Force
+            Remove-Item -Recurse -Force (Join-Path renpy-sdk $entries[0].Name)
+          }
+
+      - name: "SDK diagnostic (windows)"
+        shell: pwsh
+        run: |
+          Write-Output "SDK listing:"; Get-ChildItem renpy-sdk -Force
+          Write-Output "renpy.exe exists:"; if (Test-Path renpy-sdk\renpy.exe) { Write-Output 'yes' } else { Write-Output 'no' }
+
+      - name: "Run headless build (Windows) and capture logs"
+        shell: pwsh
+        run: |
+          $project = "${{ github.workspace }}"
+          Push-Location renpy-sdk
+          .\renpy.exe --version || Write-Output 'version-check-failed'
+          .\renpy.exe build $project *>&1 | Tee-Object -FilePath "../renpy_build_windows.log"
+          $code = $LASTEXITCODE; Pop-Location; exit $code
+
+      - name: Upload windows build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-build-log-windows
+          path: renpy_build_windows.log
+
+      - name: Upload windows dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist-windows
+          path: renpy-sdk\dist\**
+
+  publish:
+    name: Publish Release (on success)
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Download linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist-linux
+      - name: Download windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist-windows
+
+      - name: Create GitHub Release and upload artifacts
+        uses: ncipollo/release-action@v1
+        with:
+          tag: build-${{ github.run_number }}
+          name: CI build #${{ github.run_number }}
+          body: Automated CI build
+          files: |
+            renpy-sdk/dist/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify on failure
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: "Diagnostic: show run context"
+        run: |
+          echo "Run URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          echo "Event: $GITHUB_EVENT_NAME"
+
+      - name: Create an issue for failed CI
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GH_PAT || github.token }}
+          script: |
+            const title = `CI failed: ${process.env.GITHUB_REPOSITORY} #${process.env.GITHUB_RUN_ID}`;
+            const body = [
+              `Run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+              `Jobs: build-linux, build-windows`,
+              `See logs and attached build logs/artifacts.`,
+            ].join("\n\n");
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body
+            });

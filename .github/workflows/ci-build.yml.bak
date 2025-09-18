@@ -1,0 +1,1486 @@
+name: CI — Ren'Py build (Linux + Windows)
+
+env:
+  SDK_VERSION: '8.4.1'
+
+name: ci-sanity-minimal
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+
+jobs:
+  noop-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print marker
+        run: echo "CI sanity minimal"
+
+  noop-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print marker
+        shell: pwsh
+        run: Write-Output "CI sanity minimal"
+
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+
+jobs:
+  noop-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print marker
+        run: echo "CI sanity minimal"
+
+  noop-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print marker
+        shell: pwsh
+        run: Write-Output "CI sanity minimal"
+
+            const title = `CI failed: ${github.context.repo.owner}/${github.context.repo.repo} (run ${process.env.GITHUB_RUN_NUMBER})`;
+            const body = `One or more CI jobs failed. Commit: ${github.context.sha}`;
+            await github.rest.issues.create({ owner: github.context.repo.owner, repo: github.context.repo.repo, title, body });
+
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+name: CI — Ren'Py build (Linux + Windows)
+
+permissions:
+  contents: write
+  issues: write
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SDK_VERSION: '8.4.1'
+
+jobs:
+  build-linux:
+    name: Build — Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: cache-linux
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download Ren'Py SDK (if cache miss)
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          curl -sSL "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir -p renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+      - name: Run headless build (Linux)
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+          ./renpy.sh --version || true
+          ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build_linux.log || true
+
+      - name: Upload linux build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-build-log-linux
+          path: renpy_build_linux.log
+
+  build-windows:
+    name: Build — Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - id: cache-windows
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download Ren'Py SDK (if cache miss)
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $url = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+          Invoke-WebRequest -Uri $url -OutFile renpy-sdk.zip
+          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+
+      - name: Run headless build (Windows)
+        shell: pwsh
+        run: |
+          $project = "${{ github.workspace }}"
+          Push-Location renpy-sdk
+          .\renpy.exe --version || Write-Output 'version-check-failed'
+          .\renpy.exe build $project *>&1 | Tee-Object -FilePath "../renpy_build_windows.log"; $code = $LASTEXITCODE; Pop-Location; exit $code
+
+      - name: Upload windows build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-build-log-windows
+          path: renpy_build_windows.log
+
+  publish:
+    name: Create Release (on success)
+    needs: [build-linux, build-windows]
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: build-${{ github.run_number }}
+          name: CI build #${{ github.run_number }}
+          body: Automated Ren'Py CI build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify on failure
+    needs: [build-linux, build-windows]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue for failed CI
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = `CI failed: ${github.context.repo.owner}/${github.context.repo.repo} (run ${process.env.GITHUB_RUN_NUMBER})`;
+            const body = `One or more CI jobs failed. Commit: ${github.context.sha}`;
+            await github.rest.issues.create({ owner: github.context.repo.owner, repo: github.context.repo.repo, title, body });
+
+permissions:
+  contents: write
+  issues: write
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SDK_VERSION: '8.4.1'
+
+jobs:
+  build-linux:
+    name: Build (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore cache
+        id: cache-linux
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+
+      - name: Download SDK if needed
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          curl -sSL "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir -p renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+      - name: SDK diagnostic
+        run: |
+          echo "SDK listing:"; ls -la renpy-sdk || true
+          echo "renpy.sh present:"; test -f renpy-sdk/renpy.sh && echo yes || echo no
+
+      - name: Build (headless)
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+          ./renpy.sh --version || true
+          ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build_linux.log
+
+      - name: Upload linux logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-build-log-linux
+          path: renpy_build_linux.log
+
+      - name: Upload linux dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist-linux
+          path: renpy-sdk/dist/**
+
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore cache
+        id: cache-windows
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+
+      - name: Download SDK if needed
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $sdkUrl = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+          Invoke-WebRequest -Uri $sdkUrl -OutFile renpy-sdk.zip
+          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+          $entries = Get-ChildItem renpy-sdk
+          if ($entries.Count -eq 1 -and ($entries[0].PSIsContainer)) {
+            Move-Item -Path (Join-Path renpy-sdk $entries[0].Name)\* -Destination renpy-sdk
+          }
+
+      - name: SDK diagnostic (windows)
+        shell: pwsh
+        run: |
+          Write-Output "SDK listing:"; Get-ChildItem renpy-sdk -Force
+          Write-Output "renpy.exe present:"; if (Test-Path renpy-sdk\renpy.exe) { Write-Output 'yes' } else { Write-Output 'no' }
+
+      - name: Build (headless)
+        shell: pwsh
+        run: |
+          $project = "${{ github.workspace }}"
+          Push-Location renpy-sdk
+          .\renpy.exe --version || Write-Output 'version-check-failed'
+          .\renpy.exe build $project *>&1 | Tee-Object -FilePath "../renpy_build_windows.log"
+          $code = $LASTEXITCODE; Pop-Location; exit $code
+
+      - name: Upload windows logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-build-log-windows
+          path: renpy_build_windows.log
+
+      - name: Upload windows dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist-windows
+          path: renpy-sdk\dist\**
+
+  publish:
+    name: Publish Release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Download linux dist
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist-linux
+
+      - name: Download windows dist
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist-windows
+
+      - name: Create Release and upload
+        uses: ncipollo/release-action@v1
+        with:
+          tag: build-${{ github.run_number }}
+          name: CI build #${{ github.run_number }}
+          body: Automated CI build
+          files: |
+            renpy-sdk/dist/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify on failure
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Show run info
+        run: |
+          echo "Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          echo "Event: $GITHUB_EVENT_NAME"
+
+      - name: Create issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GH_PAT || github.token }}
+          script: |
+            const title = `CI failed: ${process.env.GITHUB_REPOSITORY} #${process.env.GITHUB_RUN_ID}`;
+            const body = [`Run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`, `Jobs: build-linux, build-windows`, `See logs and artifacts.`].join('\n\n');
+            await github.rest.issues.create({ owner: context.repo.owner, repo: context.repo.repo, title, body });
+            });
+
+  on:
+    push:
+      branches: [ main, 'feature/**' ]
+    pull_request:
+      branches: [ main ]
+
+  env:
+    SDK_VERSION: '8.4.1'
+
+  jobs:
+    build-linux:
+      name: Build (linux)
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - id: cache-linux
+          name: Restore Ren'Py SDK cache
+          uses: actions/cache@v4
+          with:
+            path: renpy-sdk
+            key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+            restore-keys: |
+              ${{ runner.os }}-renpy-
+
+        - name: Download and extract Ren'Py SDK (if cache miss)
+          if: steps.cache-linux.outputs.cache-hit != 'true'
+          run: |
+            SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+            echo "Downloading $SDK_URL"
+            curl -sSL "$SDK_URL" -o renpy-sdk.tar.bz2
+            mkdir -p renpy-sdk
+            tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+        - name: SDK diagnostic (linux)
+          run: |
+            echo "SDK listing:"; ls -la renpy-sdk || true
+            echo "renpy.sh exists:"; test -f renpy-sdk/renpy.sh && echo yes || echo no
+
+        - name: Run headless build (Linux) and capture logs
+          working-directory: renpy-sdk
+          run: |
+            PROJECT_DIR="${{ github.workspace }}"
+            ./renpy.sh --version || true
+            ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build_linux.log
+
+        - name: Upload linux build log
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-build-log-linux
+            path: renpy_build_linux.log
+
+        - name: Upload linux dist artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-dist-linux
+            path: renpy-sdk/dist/**
+
+    build-windows:
+      name: Build (windows)
+      runs-on: windows-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - id: cache-windows
+          name: Restore Ren'Py SDK cache
+          uses: actions/cache@v4
+          with:
+            path: renpy-sdk
+            key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+            restore-keys: |
+              ${{ runner.os }}-renpy-
+
+        - name: Download and extract Ren'Py SDK (if cache miss)
+          if: steps.cache-windows.outputs.cache-hit != 'true'
+          shell: pwsh
+          run: |
+            $sdkUrl = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+            Write-Output "Downloading $sdkUrl"
+            Invoke-WebRequest -Uri $sdkUrl -OutFile renpy-sdk.zip
+            Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+            $entries = Get-ChildItem renpy-sdk
+            if ($entries.Count -eq 1 -and (Test-Path (Join-Path renpy-sdk $entries[0].Name))) {
+              Move-Item -Path (Join-Path renpy-sdk $entries[0].Name '*') -Destination renpy-sdk -Force
+              Remove-Item -Recurse -Force (Join-Path renpy-sdk $entries[0].Name)
+            }
+
+        - name: SDK diagnostic (windows)
+          shell: pwsh
+          run: |
+            Write-Output "SDK listing:"; Get-ChildItem renpy-sdk -Force
+            Write-Output "renpy.exe exists:"; if (Test-Path renpy-sdk\renpy.exe) { Write-Output 'yes' } else { Write-Output 'no' }
+
+        - name: Run headless build (Windows) and capture logs
+          shell: pwsh
+          run: |
+            $project = "${{ github.workspace }}"
+            Push-Location renpy-sdk
+            .\renpy.exe --version || Write-Output 'version-check-failed'
+            .\renpy.exe build $project *>&1 | Tee-Object -FilePath "../renpy_build_windows.log"
+            $code = $LASTEXITCODE; Pop-Location; exit $code
+
+        - name: Upload windows build log
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-build-log-windows
+            path: renpy_build_windows.log
+
+        - name: Upload windows dist artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-dist-windows
+            path: renpy-sdk/dist/**
+
+    publish:
+      name: Publish Release (on success)
+      needs: [build-linux, build-windows]
+      runs-on: ubuntu-latest
+      if: ${{ success() }}
+      steps:
+        - name: Download linux artifacts
+          uses: actions/download-artifact@v4
+          with:
+            name: renpy-dist-linux
+        - name: Download windows artifacts
+          uses: actions/download-artifact@v4
+          with:
+            name: renpy-dist-windows
+
+        - name: Create GitHub Release and upload artifacts
+          uses: ncipollo/release-action@v1
+          with:
+            tag: build-${{ github.run_number }}
+            name: CI build #${{ github.run_number }}
+            body: Automated CI build
+            files: |
+              renpy-sdk/dist/**
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    notify:
+      name: Notify on failure
+      needs: [build-linux, build-windows]
+      runs-on: ubuntu-latest
+      if: ${{ failure() }}
+      steps:
+        - name: Diagnostic: show run context
+          run: |
+            echo "Run URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "Event: $GITHUB_EVENT_NAME"
+
+        - name: Create an issue for failed CI
+          uses: actions/github-script@v6
+          with:
+            github-token: ${{ secrets.GH_PAT || github.token }}
+            script: |
+              const title = `CI failed: ${process.env.GITHUB_REPOSITORY} #${process.env.GITHUB_RUN_ID}`;
+              const body = [
+                `Run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+                `Jobs: build-linux, build-windows`,
+                `See logs and attached build logs/artifacts.`,
+              ].join("\n\n");
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+    branches: [ main, 'feature/**' ]
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Print marker
+        run: |
+          echo "CI sanity marker: minimal workflow in place"
+name: ci-sanity-minimal
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Print marker
+        run: echo "CI sanity marker: minimal workflow in place"
+name: ci-sanity-minimal
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Print marker
+        run: |
+          echo "CI sanity marker: replace this file with the full workflow when ready"
+
+permissions:
+  name: CI — Ren'Py build (Linux + Windows) (clean)
+
+  permissions:
+    contents: write
+    issues: write
+
+  on:
+    push:
+      branches: [ main, 'feature/**' ]
+    pull_request:
+      branches: [ main ]
+
+  env:
+    SDK_VERSION: '8.4.1'
+
+  jobs:
+    build-linux:
+      name: Build (linux)
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - id: cache-linux
+          name: Restore Ren'Py SDK cache
+          uses: actions/cache@v4
+          with:
+            path: renpy-sdk
+            key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+            restore-keys: |
+              ${{ runner.os }}-renpy-
+
+        - name: Download and extract Ren'Py SDK (if cache miss)
+          if: steps.cache-linux.outputs.cache-hit != 'true'
+          run: |
+            SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+            echo "Downloading $SDK_URL"
+            curl -sSL "$SDK_URL" -o renpy-sdk.tar.bz2
+            mkdir -p renpy-sdk
+            tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+        - name: "SDK diagnostic (linux)"
+          run: |
+            echo "SDK listing:"; ls -la renpy-sdk || true
+            echo "renpy.sh exists:"; test -f renpy-sdk/renpy.sh && echo yes || echo no
+
+        - name: "Run headless build (Linux) and capture logs"
+          working-directory: renpy-sdk
+          run: |
+            PROJECT_DIR="${{ github.workspace }}"
+            ./renpy.sh --version || true
+            ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build_linux.log
+
+        - name: Upload linux build log
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-build-log-linux
+            path: renpy_build_linux.log
+
+        - name: Upload linux dist artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-dist-linux
+            path: renpy-sdk/dist/**
+
+    build-windows:
+      name: Build (windows)
+      runs-on: windows-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - id: cache-windows
+          name: Restore Ren'Py SDK cache
+          uses: actions/cache@v4
+          with:
+            path: renpy-sdk
+            key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+            restore-keys: |
+              ${{ runner.os }}-renpy-
+
+        - name: Download and extract Ren'Py SDK (if cache miss)
+          if: steps.cache-windows.outputs.cache-hit != 'true'
+          shell: pwsh
+          run: |
+            $sdkUrl = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+            Write-Output "Downloading $sdkUrl"
+            Invoke-WebRequest -Uri $sdkUrl -OutFile renpy-sdk.zip
+            Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+            $entries = Get-ChildItem renpy-sdk
+            if ($entries.Count -eq 1 -and (Test-Path (Join-Path renpy-sdk $entries[0].Name))) {
+              Move-Item -Path (Join-Path renpy-sdk $entries[0].Name '*') -Destination renpy-sdk -Force
+              Remove-Item -Recurse -Force (Join-Path renpy-sdk $entries[0].Name)
+            }
+
+        - name: "SDK diagnostic (windows)"
+          shell: pwsh
+          run: |
+            Write-Output "SDK listing:"; Get-ChildItem renpy-sdk -Force
+            Write-Output "renpy.exe exists:"; if (Test-Path renpy-sdk\renpy.exe) { Write-Output 'yes' } else { Write-Output 'no' }
+
+        - name: "Run headless build (Windows) and capture logs"
+          shell: pwsh
+          run: |
+            $project = "${{ github.workspace }}"
+            Push-Location renpy-sdk
+            .\renpy.exe --version || Write-Output 'version-check-failed'
+            .\renpy.exe build $project *>&1 | Tee-Object -FilePath "../renpy_build_windows.log"
+            $code = $LASTEXITCODE; Pop-Location; exit $code
+
+        - name: Upload windows build log
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-build-log-windows
+            path: renpy_build_windows.log
+
+        - name: Upload windows dist artifacts
+          uses: actions/upload-artifact@v4
+          with:
+            name: renpy-dist-windows
+            path: renpy-sdk\\dist\\**
+
+    publish:
+      name: Publish Release (on success)
+      needs: [build-linux, build-windows]
+      runs-on: ubuntu-latest
+      if: ${{ success() }}
+      steps:
+        - name: Download linux artifacts
+          uses: actions/download-artifact@v4
+          with:
+            name: renpy-dist-linux
+        - name: Download windows artifacts
+          uses: actions/download-artifact@v4
+          with:
+            name: renpy-dist-windows
+
+        - name: Create GitHub Release and upload artifacts
+          uses: ncipollo/release-action@v1
+          with:
+            tag: build-${{ github.run_number }}
+            name: CI build #${{ github.run_number }}
+            body: Automated CI build
+            files: |
+              renpy-sdk/dist/**
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    notify:
+      name: Notify on failure
+      needs: [build-linux, build-windows]
+      runs-on: ubuntu-latest
+      if: ${{ failure() }}
+      steps:
+        - name: "Diagnostic: show run context"
+          run: |
+            echo "Run URL: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "Event: $GITHUB_EVENT_NAME"
+
+        - name: Create an issue for failed CI
+          uses: actions/github-script@v6
+          with:
+            github-token: ${{ secrets.GH_PAT || github.token }}
+            script: |
+              const title = `CI failed: ${process.env.GITHUB_REPOSITORY} #${process.env.GITHUB_RUN_ID}`;
+              const body = [
+                `Run: ${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,
+                `Jobs: build-linux, build-windows`,
+                `See logs and attached build logs/artifacts.`,
+              ].join("\n\n");
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+jobs:
+  build-linux:
+    name: Build (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (optional)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - id: cache-linux
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+          
+        - name: SDK contents (diagnostic)
+          run: |
+            echo "Ren'Py SDK top-level contents:"; ls -la renpy-sdk || true
+            echo "SDK renpy.sh present:"; test -f renpy-sdk/renpy.sh && echo yes || echo no
+
+        - name: Env + workspace (diagnostic)
+          run: |
+            echo "---- ENV ----"; env || true
+            echo "---- WORKSPACE LISTING ----"; ls -la "${{ github.workspace }}" || true
+
+      - name: Run headless build (Linux)
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+            echo "Running renpy --version"; ./renpy.sh --version || true
+            echo "Invoking headless build (output -> renpy_build.log)"; ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build.log
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        run: ls -la renpy-sdk/dist || true
+
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: cache-windows
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $url = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+          Invoke-WebRequest -Uri $url -OutFile renpy-sdk.zip
+          New-Item -ItemType Directory -Path renpy-sdk | Out-Null
+          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+          # Ren'Py zip may contain a top-level folder, move contents up if needed
+          $entries = Get-ChildItem renpy-sdk
+          if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
+            Move-Item -Path (Join-Path renpy-sdk $entries[0].Name)\* -Destination renpy-sdk
+          }
+          
+        - name: SDK contents (diagnostic)
+          shell: pwsh
+          run: |
+            Write-Output "Ren'Py SDK top-level contents:"; Get-ChildItem renpy-sdk -Force
+            Write-Output "Is renpy.exe present?"; if (Test-Path renpy-sdk\renpy.exe) { Write-Output 'yes' } else { Write-Output 'no' }
+
+        - name: Env + workspace (diagnostic)
+          shell: pwsh
+          run: |
+            Write-Output "---- ENV ----"; Get-ChildItem Env:
+            Write-Output "---- WORKSPACE LISTING ----"; Get-ChildItem -Force "${{ github.workspace }}"
+
+      - name: Run headless build (Windows)
+        shell: pwsh
+        run: |
+          $project = "${{ github.workspace }}"
+            $renpy = Join-Path $PWD 'renpy-sdk' 'renpy.exe'
+            Write-Output "Attempting renpy.exe --version"; & $renpy --version || Write-Output 'version-check-failed'
+            Write-Output "Invoking headless build (output -> renpy_build.log)"; & $renpy build $project 2>&1 | Tee-Object -FilePath "$PWD\renpy_build.log"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        shell: pwsh
+        run: Get-ChildItem -Recurse -Force renpy-sdk\dist || Exit 0
+
+  publish:
+    name: Publish Release (on success)
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist
+          path: artifacts
+
+      - name: Create GitHub Release and upload artifacts
+        uses: ncipollo/release-action@v1
+        with:
+          tag: build-${{ github.run_number }}
+          name: CI build #${{ github.run_number }}
+          body: |
+            Automated CI build
+            Ref: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+          files: artifacts/**
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  notify:
+    name: Notify on failure
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Create an issue for failed CI
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = `CI build failed for ${{ github.ref }} (run #${{ github.run_number }})`;
+            const body = `One or more CI jobs failed.\n\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nCommit: ${{ github.sha }}\n- linux job: ${{ needs['build-linux'].result }}\n- windows job: ${{ needs['build-windows'].result }}\n\nSee the Actions tab for logs.`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body
+            });
+name: ci-sanity-unique-20250918
+
+on: [push]
+
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Print marker
+        run: echo "CI sanity marker: 7f3b1a"
+name: CI — Ren'Py build (Linux + Windows)
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SDK_VERSION: '8.4.1'
+
+jobs:
+  build-linux:
+    name: Build (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (optional)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - id: cache-linux
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+      - name: Run headless build (Linux)
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+          ./renpy.sh --version || true
+          ./renpy.sh build "$PROJECT_DIR" 2>&1 | tee ../renpy_build_linux.log || true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        run: ls -la renpy-sdk/dist || true
+
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: cache-windows
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $url = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+          Invoke-WebRequest -Uri $url -OutFile renpy-sdk.zip
+          New-Item -ItemType Directory -Path renpy-sdk | Out-Null
+          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+          # Ren'Py zip may contain a top-level folder, move contents up if needed
+          $entries = Get-ChildItem renpy-sdk
+          if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
+            Move-Item -Path (Join-Path renpy-sdk $entries[0].Name)\* -Destination renpy-sdk
+          }
+
+      - name: Run headless build (Windows)
+        shell: pwsh
+        run: |
+          $project = "${{ github.workspace }}"
+          $renpy = Join-Path $PWD 'renpy-sdk' 'renpy.exe'
+          & $renpy --version || Write-Output 'version-check-failed'
+          & $renpy build $project *>&1 | Tee-Object -FilePath "../renpy_build_windows.log"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        shell: pwsh
+        run: Get-ChildItem -Recurse -Force renpy-sdk\dist || Exit 0
+
+  publish:
+    name: Publish Release (on success)
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist
+          path: artifacts
+
+      - name: Create GitHub Release and upload artifacts
+        uses: ncipollo/release-action@v1
+        with:
+          tag: build-${{ github.run_number }}
+          name: CI build #${{ github.run_number }}
+          body: |
+            Automated CI build
+            Ref: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+          files: artifacts/**
+
+  notify:
+    name: Notify on failure
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Create an issue for failed CI
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = `CI build failed for ${{ github.ref }} (run #${{ github.run_number }})`;
+            const body = `One or more CI jobs failed.\n\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nCommit: ${{ github.sha }}\n- linux job: ${{ needs['build-linux'].result }}\n- windows job: ${{ needs['build-windows'].result }}\n\nSee the Actions tab for logs.`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body
+            });
+name: CI — Ren'Py build (Linux + Windows)
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SDK_VERSION: '8.4.1'
+
+jobs:
+  build-linux:
+    name: Build (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (optional)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - id: cache-linux
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+      - name: Run headless build (Linux)
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+          ./renpy.sh build "$PROJECT_DIR"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        run: ls -la renpy-sdk/dist || true
+
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: cache-windows
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $url = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+          Invoke-WebRequest -Uri $url -OutFile renpy-sdk.zip
+          New-Item -ItemType Directory -Path renpy-sdk | Out-Null
+          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+          # Ren'Py zip may contain a top-level folder, move contents up if needed
+          $entries = Get-ChildItem renpy-sdk
+          if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
+            Move-Item -Path (Join-Path renpy-sdk $entries[0].Name)\* -Destination renpy-sdk
+          }
+
+      - name: Run headless build (Windows)
+        shell: pwsh
+        run: |
+          $project = "${{ github.workspace }}"
+          $renpy = Join-Path $PWD 'renpy-sdk' 'renpy.exe'
+          & $renpy build $project
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        shell: pwsh
+        run: Get-ChildItem -Recurse -Force renpy-sdk\dist || Exit 0
+
+  publish:
+    name: Publish Release (on success)
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: renpy-dist
+          path: artifacts
+
+      - name: Create GitHub Release and upload artifacts
+        uses: ncipollo/release-action@v1
+        with:
+          tag: build-${{ github.run_number }}
+          name: CI build #${{ github.run_number }}
+          body: |
+            Automated CI build
+            Ref: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+          files: artifacts/**
+
+  notify:
+    name: Notify on failure
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Create an issue for failed CI
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const title = `CI build failed for ${{ github.ref }} (run #${{ github.run_number }})`;
+            const body = `One or more CI jobs failed.\n\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nCommit: ${{ github.sha }}\n- linux job: ${{ needs['build-linux'].result }}\n- windows job: ${{ needs['build-windows'].result }}\n\nSee the Actions tab for logs.`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body
+            });
+name: CI — Ren'Py build (Linux + Windows)
+name: CI — Ren'Py build (Linux + Windows)
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  SDK_VERSION: '8.4.1'
+
+jobs:
+  build-linux:
+    name: Build (linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java (optional)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - id: cache-linux
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        if: steps.cache-linux.outputs.cache-hit != 'true'
+        run: |
+          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+          curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
+          mkdir renpy-sdk
+          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+      - name: Run headless build (Linux)
+        working-directory: renpy-sdk
+        run: |
+          PROJECT_DIR="${{ github.workspace }}"
+          ./renpy.sh build "$PROJECT_DIR"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: renpy-dist
+          path: renpy-sdk/dist/**
+
+      - name: List dist
+        run: ls -la renpy-sdk/dist || true
+
+  build-windows:
+    name: Build (windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - id: cache-windows
+        name: Restore Ren'Py SDK cache
+        uses: actions/cache@v4
+        with:
+          path: renpy-sdk
+          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-renpy-
+
+      - name: Download and extract Ren'Py SDK (if cache miss)
+        name: CI — Ren'Py build (Linux + Windows)
+
+        on:
+          push:
+            branches: [ main, 'feature/**' ]
+          pull_request:
+            branches: [ main ]
+
+        env:
+          SDK_VERSION: '8.4.1'
+
+        jobs:
+          build-linux:
+            name: Build (linux)
+            runs-on: ubuntu-latest
+            steps:
+              - name: Checkout repository
+                uses: actions/checkout@v4
+
+              - name: Set up Java (optional)
+                uses: actions/setup-java@v4
+                with:
+                  distribution: temurin
+                  java-version: '11'
+
+              - id: cache-linux
+                name: Restore Ren'Py SDK cache
+                uses: actions/cache@v4
+                with:
+                  path: renpy-sdk
+                  key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+                  restore-keys: |
+                    ${{ runner.os }}-renpy-
+
+              - name: Download and extract Ren'Py SDK (if cache miss)
+                if: steps.cache-linux.outputs.cache-hit != 'true'
+                run: |
+                  SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+                  curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
+                  mkdir renpy-sdk
+                  tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+              - name: Run headless build (Linux)
+                working-directory: renpy-sdk
+                run: |
+                  PROJECT_DIR="${{ github.workspace }}"
+                  ./renpy.sh build "$PROJECT_DIR"
+
+              - name: Upload build artifacts
+                uses: actions/upload-artifact@v4
+                with:
+                  name: renpy-dist
+                  path: renpy-sdk/dist/**
+
+              - name: List dist
+                run: ls -la renpy-sdk/dist || true
+
+          build-windows:
+            name: Build (windows)
+            runs-on: windows-latest
+            steps:
+              - name: Checkout repository
+                uses: actions/checkout@v4
+
+              - id: cache-windows
+                name: Restore Ren'Py SDK cache
+                uses: actions/cache@v4
+                with:
+                  path: renpy-sdk
+                  key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+                  restore-keys: |
+                    ${{ runner.os }}-renpy-
+
+              - name: Download and extract Ren'Py SDK (if cache miss)
+                name: CI — Ren'Py build (Linux + Windows)
+
+                on:
+                  push:
+                    branches: [ main, 'feature/**' ]
+                  pull_request:
+                    branches: [ main ]
+
+                env:
+                  SDK_VERSION: '8.4.1'
+
+                jobs:
+                  build-linux:
+                    name: Build (linux)
+                    runs-on: ubuntu-latest
+                    steps:
+                      - name: Checkout repository
+                        uses: actions/checkout@v4
+
+                      - name: Set up Java (optional)
+                        uses: actions/setup-java@v4
+                        with:
+                          distribution: temurin
+                          java-version: '11'
+
+                      - id: cache-linux
+                        name: Restore Ren'Py SDK cache
+                        uses: actions/cache@v4
+                        with:
+                          path: renpy-sdk
+                          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+                          restore-keys: |
+                            ${{ runner.os }}-renpy-
+
+                      - name: Download and extract Ren'Py SDK (if cache miss)
+                        if: steps.cache-linux.outputs.cache-hit != 'true'
+                        run: |
+                          SDK_URL="https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.tar.bz2"
+                          curl -L "$SDK_URL" -o renpy-sdk.tar.bz2
+                          mkdir renpy-sdk
+                          tar -xjf renpy-sdk.tar.bz2 -C renpy-sdk --strip-components=1
+
+                      - name: Run headless build (Linux)
+                        working-directory: renpy-sdk
+                        run: |
+                          PROJECT_DIR="${{ github.workspace }}"
+                          ./renpy.sh build "$PROJECT_DIR"
+
+                      - name: Upload build artifacts
+                        uses: actions/upload-artifact@v4
+                        with:
+                          name: renpy-dist
+                          path: renpy-sdk/dist/**
+
+                      - name: List dist
+                        run: ls -la renpy-sdk/dist || true
+
+                  build-windows:
+                    name: Build (windows)
+                    runs-on: windows-latest
+                    steps:
+                      - name: Checkout repository
+                        uses: actions/checkout@v4
+
+                      - id: cache-windows
+                        name: Restore Ren'Py SDK cache
+                        uses: actions/cache@v4
+                        with:
+                          path: renpy-sdk
+                          key: ${{ runner.os }}-renpy-${{ env.SDK_VERSION }}
+                          restore-keys: |
+                            ${{ runner.os }}-renpy-
+
+                      - name: Download and extract Ren'Py SDK (if cache miss)
+                        if: steps.cache-windows.outputs.cache-hit != 'true'
+                        shell: pwsh
+                        run: |
+                          $url = "https://www.renpy.org/dl/${{ env.SDK_VERSION }}/renpy-${{ env.SDK_VERSION }}-sdk.zip"
+                          Invoke-WebRequest -Uri $url -OutFile renpy-sdk.zip
+                          New-Item -ItemType Directory -Path renpy-sdk | Out-Null
+                          Expand-Archive -Path renpy-sdk.zip -DestinationPath renpy-sdk
+                          # Ren'Py zip may contain a top-level folder, move contents up if needed
+                          $entries = Get-ChildItem renpy-sdk
+                          if ($entries.Count -eq 1 -and $entries[0].PSIsContainer) {
+                            Move-Item -Path (Join-Path renpy-sdk $entries[0].Name)\* -Destination renpy-sdk
+                          }
+
+                      - name: Run headless build (Windows)
+                        shell: pwsh
+                        run: |
+                          $project = "${{ github.workspace }}"
+                          $renpy = Join-Path $PWD 'renpy-sdk' 'renpy.exe'
+                          & $renpy build $project
+
+                      - name: Upload build artifacts
+                        uses: actions/upload-artifact@v4
+                        with:
+                          name: renpy-dist
+                          path: renpy-sdk/dist/**
+
+                      - name: List dist
+                        shell: pwsh
+                        run: Get-ChildItem -Recurse -Force renpy-sdk\dist || Exit 0
+
+                  publish:
+                    name: Publish Release (on success)
+                    needs: [build-linux, build-windows]
+                    runs-on: ubuntu-latest
+                    if: ${{ success() }}
+                    steps:
+                      - name: Download build artifacts
+                        uses: actions/download-artifact@v4
+                        with:
+                          name: renpy-dist
+                          path: artifacts
+
+                      - name: Create GitHub Release and upload artifacts
+                        uses: ncipollo/release-action@v1
+                        with:
+                          tag: build-${{ github.run_number }}
+                          name: CI build #${{ github.run_number }}
+                          body: |
+                            Automated CI build
+                            Ref: ${{ github.ref }}
+                            Commit: ${{ github.sha }}
+                          files: artifacts/**
+
+                  notify:
+                    name: Notify on failure
+                    needs: [build-linux, build-windows]
+                    runs-on: ubuntu-latest
+                    if: ${{ failure() }}
+                    steps:
+                      - name: Create an issue for failed CI
+                        uses: actions/github-script@v6
+                        with:
+                          script: |
+                            const title = `CI build failed for ${{ github.ref }} (run #${{ github.run_number }})`;
+                            const body = `One or more CI jobs failed.\n\nWorkflow: ${{ github.workflow }}\nRun: ${{ github.run_number }}\nCommit: ${{ github.sha }}\n- linux job: ${{ needs['build-linux'].result }}\n- windows job: ${{ needs['build-windows'].result }}\n\nSee the Actions tab for logs.`;
+                            await github.rest.issues.create({
+                              owner: context.repo.owner,
+                              repo: context.repo.repo,
+                              title,
+                              body
+                            });
