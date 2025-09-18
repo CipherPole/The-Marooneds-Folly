@@ -2,6 +2,7 @@
 
 This repository contains a Ren'Py visual novel project.
 
+feature/test-auto
 ## Troubleshooting: Fallback Branch
 
 If the game is broken or unstable, you can fall back to a known working branch by cloning the following branch:
@@ -11,6 +12,15 @@ git clone https://github.com/CipherPole/The-Marooneds-Folly.git -b feature/test-
 ```
 
 This will clone the repository and check out the `feature/test-auto` branch, which is intended as a stable fallback.
+=======
+Prerequisites
+-------------
+
+- Ren'Py: Download and install Ren'Py to run the game locally: https://www.renpy.org/
+- Git: Install Git to clone, push, and collaborate: https://git-scm.com/downloads
+- (Optional) GitHub CLI: https://cli.github.com/
+
+Make sure Ren'Py is installed before attempting to run the project—open the Ren'Py launcher, add this folder as a project (or point it at the parent folder), and run.
 
 What's included
 
