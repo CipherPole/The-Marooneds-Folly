@@ -298,9 +298,33 @@ A short, clear README for the Ren'Py visual novel project.
 Overview
 - This repository contains the game's Ren'Py source: scripts, assets, and localization.
 
+feature/add-player-name
 Key folders
 - `game/` — Ren'Py scripts (.rpy), translations, and other source files.
 - `gui/`, `audio/`, `images/` — UI art, sounds, and image assets.
+=======
+feature/test-auto
+## Troubleshooting: Fallback Branch
+
+If the game is broken or unstable, you can fall back to a known working branch by cloning the following branch:
+
+```powershell
+git clone https://github.com/CipherPole/The-Marooneds-Folly.git -b feature/test-auto
+```
+
+This will clone the repository and check out the `feature/test-auto` branch, which is intended as a stable fallback.
+=======
+Prerequisites
+-------------
+
+- Ren'Py: Download and install Ren'Py to run the game locally: https://www.renpy.org/
+- Git: Install Git to clone, push, and collaborate: https://git-scm.com/downloads
+- (Optional) GitHub CLI: https://cli.github.com/
+
+Make sure Ren'Py is installed before attempting to run the project—open the Ren'Py launcher, add this folder as a project (or point it at the parent folder), and run.
+
+What's included
+main
 
 Quick start (Windows PowerShell)
 1. Install Git if needed: https://git-scm.com/downloads
@@ -575,5 +599,19 @@ What I can do next
 - Create a `CONTRIBUTING.md` with branch and PR guidelines.
 
 Which would you like me to do next?
+
+### Discord notifications
+
+You can receive repository notifications in Discord. To enable this, add a repository secret named `DISCORD_WEBHOOK` (Settings → Secrets and variables → Actions → New repository secret) and paste the webhook URL as the value.
+
+The repository includes a workflow `discord-notify.yml` which will post messages to that webhook when:
+- a push happens on any branch (reports branch, author and commit link)
+- a pull request is merged (reports title, author, merged by, and PR link)
+
+Note: For security, add the webhook as a secret rather than placing it directly in the repo. If you'd like, I can add the webhook secret for you if you paste the webhook here (but keep in mind chat is not a secure channel; it's safer to add it manually in the GitHub UI).
+
+Update checker notes:
+- The game now performs a light-weight check of the `main` branch at startup and will notify players non-intrusively if a new commit is detected.
+- The last-seen SHA is stored in `.last_main_sha`, which is ignored by `.gitignore` so it won't be committed.
 
 
