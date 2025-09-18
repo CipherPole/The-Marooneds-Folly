@@ -1,0 +1,21 @@
+name: Lint — GitHub Actions & YAML (branch-only)
+
+on:
+  push:
+    branches: [ feature/add-player-name ]
+
+jobs:
+  super-lint:
+    name: Super-Linter (YAML + Actions)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Super-Linter for YAML and Actions
+        uses: docker://github/super-linter:slim-latest
+        env:
+          VALIDATE_YAML: true
+          VALIDATE_GITHUB_ACTIONS: true
+          FILTER_REGEX_EXCLUDE: '^(?!\.github/workflows/).*'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
