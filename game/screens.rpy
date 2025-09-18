@@ -254,7 +254,6 @@ screen quick_menu():
             textbutton _("Q.Save") action QuickSave()
             textbutton _("Q.Load") action QuickLoad()
             textbutton _("Prefs") action ShowMenu('preferences')
-            textbutton _("Equipment") action ShowMenu('equipment')
 
 
 ## This code ensures that the quick_menu screen is displayed in-game, whenever
@@ -1620,47 +1619,3 @@ style slider_vbox:
 style slider_slider:
     variant "small"
     xsize 900
-
-
-## Equipment screen - allows equipping period-appropriate items
-screen equipment():
-
-    tag menu
-
-    use game_menu(_("Equipment"), scroll="viewport"):
-
-        vbox:
-            spacing 15
-
-            label _("Equipped")
-            hbox:
-                spacing 20
-                text "Weapon: [player_equipment['Weapon']]"
-                text "Armor: [player_equipment['Armor']]"
-                text "Accessory: [player_equipment['Accessory']]"
-
-            null height 10
-
-            label _("Inventory")
-
-            viewport:
-                draggable True
-                mousewheel True
-                vbox:
-                    spacing 8
-                    for it in inventory:
-                        $ owned = it.get('owned', False)
-                        hbox:
-                            spacing 12
-                            text "[it['name']] ([it['type']])" xmaximum 400
-                            text it.get('desc', '') xmaximum 600
-                            if owned:
-                                textbutton _("Equip") action Function(equip_item, it['name'])
-                            else:
-                                text "(Not owned)"
-
-            null height 20
-
-            hbox:
-                textbutton _("Done") action Return()
-
