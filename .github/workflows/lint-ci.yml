@@ -1,21 +1,24 @@
-name: Lint — GitHub Actions & YAML (branch-only)
+---
+name: Super-Linter
 
 on:
+  pull_request:
+    branches: [main]
   push:
-    branches: [ 'feature/**' ]
+    branches: [main]
 
 jobs:
-  super-lint:
-    name: Super-Linter (YAML + Actions)
+  super-linter:
+    name: Lint codebase
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run Super-Linter for YAML and Actions
-        uses: docker://github/super-linter:slim-latest
+      - name: Run Super-Linter
+        uses: github/super-linter@v4
         env:
-          VALIDATE_YAML: true
-          VALIDATE_GITHUB_ACTIONS: true
-          FILTER_REGEX_EXCLUDE: "^(?!\\.github/workflows/).*"
+          VALIDATE_ALL_CODEBASE: false
+          DEFAULT_WORKSPACE: .
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINTER_RULES_PATH: .github/linters
