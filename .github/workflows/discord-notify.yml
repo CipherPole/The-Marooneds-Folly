@@ -1,3 +1,4 @@
+---
 name: Discord notifications
 
 on:
@@ -18,8 +19,17 @@ jobs:
         run: |
           ref=${GITHUB_REF#refs/heads/}
           commit_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
-          content="**Update** in ${GITHUB_REPOSITORY}\nBranch: \`${ref}\`\nPusher: ${GITHUB_ACTOR}\nCommit: <${commit_url}>"
-          json=$(printf '%s' "{\"content\":\"$content\"}")
+          # Build message lines in an array then join to avoid YAML parsing issues.
+          lines=("**Update** in ${GITHUB_REPOSITORY}" "Branch: '${ref}'" "Pusher: ${GITHUB_ACTOR}" "Commit: <${commit_url}>")
+          content=""
+          for l in "${lines[@]}"; do
+            if [ -z "$content" ]; then
+              content="$l"
+            else
+              content="$content\n$l"
+            fi
+          done
+          json=$(printf '%s' "{\"content\":\"%s\"}" "${content}")
           curl -s -H "Content-Type: application/json" -d "$json" "$WEBHOOK"
 
       - name: Notify on PR merged
@@ -32,6 +42,14 @@ jobs:
           MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
         run: |
           pr_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR_NUMBER}"
-          content="**PR merged** in ${GITHUB_REPOSITORY}\nTitle: ${PR_TITLE}\nNumber: ${PR_NUMBER}\nAuthor: ${PR_USER}\nMerged by: ${MERGED_BY}\n${pr_url}"
-          json=$(printf '%s' "{\"content\":\"$content\"}")
+          lines=("**PR merged** in ${GITHUB_REPOSITORY}" "Title: ${PR_TITLE}" "Number: ${PR_NUMBER}" "Author: ${PR_USER}" "Merged by: ${MERGED_BY}" "${pr_url}")
+          content=""
+          for l in "${lines[@]}"; do
+            if [ -z "$content" ]; then
+              content="$l"
+            else
+              content="$content\n$l"
+            fi
+          done
+          json=$(printf '%s' "{\"content\":\"%s\"}" "${content}")
           curl -s -H "Content-Type: application/json" -d "$json" "$WEBHOOK"
