@@ -10,6 +10,9 @@ define e = Character("Eileen")
 
 label start:
 
+    # Stop any menu music (fade out) so it doesn't continue into gameplay.
+    stop music fadeout 1.0
+
     # Show a background. This uses a placeholder by default, but you can
     # add a file (named either "bg room.png" or "bg room.jpg") to the
     # images directory to show it.

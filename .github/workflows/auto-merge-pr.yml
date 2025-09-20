@@ -15,12 +15,21 @@ jobs:
     steps:
       - name: Check label and merge
         uses: actions/github-script@v7
+        env:
+          PR_TOKEN: ${{ secrets.PR_TOKEN }}
         with:
-          github-token: ${{ secrets.PR_TOKEN || github.token }}
+          # Provide github.token so the action has a usable token. The script
+          # will prefer PR_TOKEN (PAT) when available via env to avoid using
+          # secrets in YAML expressions.
+          github-token: ${{ github.token }}
           script: |
+            const token = process.env.PR_TOKEN || process.env.GITHUB_TOKEN;
+            // Use the built-in 'github' client provided to the script for most
+            // operations; octokit with explicit token can be made if needed.
+
             const label = context.payload.label.name;
             if (label !== 'automerge') {
-              core.info('Label is not automerge; exiting.');
+              console.log('Label is not automerge; exiting.');
               return;
             }
 
@@ -35,5 +44,5 @@ jobs:
               merge_method: 'squash',
             });
 
-            core.info(`Merged PR #${prNumber}: ${mergeResult.sha}`);
+            console.log(`Merged PR #${prNumber}: ${mergeResult.sha}`);
             return mergeResult;

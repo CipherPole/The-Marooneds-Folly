@@ -19,9 +19,20 @@ jobs:
 
       - name: Create or update PR
         uses: actions/github-script@v7
+        env:
+          PR_TOKEN: ${{ secrets.PR_TOKEN }}
         with:
-          github-token: ${{ secrets.PR_TOKEN || github.token }}
+          # Provide github.token so the action has a usable token. The script
+          # will use the provided authenticated client (github.rest) by
+          # default. If a PR_TOKEN (PAT) is provided in the environment we
+          # create a separate Octokit instance authenticated with it.
+          github-token: ${{ github.token }}
           script: |
+            // Use the action-provided client by default (already authenticated
+            // with the token passed via 'github-token'). This avoids requiring
+            // external modules in most cases.
+            const client = github;
+
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const head = context.ref.replace('refs/heads/', '');
@@ -29,7 +40,15 @@ jobs:
             const title = `Auto PR from ${head}`;
             const body = `This pull request was automatically created from branch **${head}**.`;
 
-            const { data: existing } = await github.rest.pulls.list({
+            // The 'github' object provided to the action is an authenticated
+            // Octokit client. For most repos it's sufficient and avoids the
+            // need to require additional modules at runtime. If you set
+            // PR_TOKEN it will not automatically be used here — opt-in code
+            // could be added if you need a PAT specifically.
+            const oct = client;
+
+            // Check for an existing open PR from this branch
+            const existing = await oct.pulls.list({
               owner,
               repo,
               head: `${owner}:${head}`,
@@ -37,12 +56,12 @@ jobs:
               state: 'open',
             });
 
-            if (existing.length > 0) {
-              core.info(`Found existing PR: ${existing[0].html_url}`);
-              return existing[0].html_url;
+            if (existing.data && existing.data.length > 0) {
+              console.log(`Found existing PR: ${existing.data[0].html_url}`);
+              return existing.data[0].html_url;
             }
 
-            const { data: pr } = await github.rest.pulls.create({
+            const pr = await oct.pulls.create({
               owner,
               repo,
               head,
@@ -51,5 +70,5 @@ jobs:
               body,
             });
 
-            core.info(`Created PR: ${pr.html_url}`);
-            return pr.html_url;
+            console.log(`Created PR: ${pr.data.html_url}`);
+            return pr.data.html_url;

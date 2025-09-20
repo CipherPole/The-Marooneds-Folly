@@ -21,4 +21,6 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_WORKSPACE: .
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Exclude game assets, cache, and saves which are not source code:
+          FILTER_REGEX_EXCLUDE: '^(game/gui/|game/audio/|game/saves/|cache/|gui/|gui/.*|game/cache/|\.rpyc$|\.rpyb$)'
           LINTER_RULES_PATH: .github/linters

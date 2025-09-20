@@ -1,4 +1,3 @@
----
 name: Discord notifications
 
 on:
@@ -16,21 +15,7 @@ jobs:
         if: github.event_name == 'push'
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: |
-          ref=${GITHUB_REF#refs/heads/}
-          commit_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
-          # Build message lines in an array then join to avoid YAML parsing issues.
-          lines=("**Update** in ${GITHUB_REPOSITORY}" "Branch: '${ref}'" "Pusher: ${GITHUB_ACTOR}" "Commit: <${commit_url}>")
-          content=""
-          for l in "${lines[@]}"; do
-            if [ -z "$content" ]; then
-              content="$l"
-            else
-              content="$content\n$l"
-            fi
-          done
-          json=$(printf '%s' "{\"content\":\"%s\"}" "${content}")
-          curl -s -H "Content-Type: application/json" -d "$json" "$WEBHOOK"
+        run: bash ./.github/scripts/discord_notify.sh push
 
       - name: Notify on PR merged
         if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
@@ -40,16 +25,4 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_USER: ${{ github.event.pull_request.user.login }}
           MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
-        run: |
-          pr_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/pull/${PR_NUMBER}"
-          lines=("**PR merged** in ${GITHUB_REPOSITORY}" "Title: ${PR_TITLE}" "Number: ${PR_NUMBER}" "Author: ${PR_USER}" "Merged by: ${MERGED_BY}" "${pr_url}")
-          content=""
-          for l in "${lines[@]}"; do
-            if [ -z "$content" ]; then
-              content="$l"
-            else
-              content="$content\n$l"
-            fi
-          done
-          json=$(printf '%s' "{\"content\":\"%s\"}" "${content}")
-          curl -s -H "Content-Type: application/json" -d "$json" "$WEBHOOK"
+        run: bash ./.github/scripts/discord_notify.sh pr_merged
