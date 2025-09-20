@@ -34,12 +34,8 @@ jobs:
               content="$content\n$l"
             fi
           done
-          # Build JSON payload using a heredoc to avoid complex escaping.
-          json=$(cat <<'JSON'
-            {"content":"%s"}
-            JSON
-          )
-          json=$(printf "%s" "$json" "${content}")
+          # Build JSON payload using python to ensure proper escaping.
+          json=$(python -c "import json,sys; print(json.dumps({'content': sys.argv[1]}))" "${content}")
           curl -s -H "Content-Type: application/json" -d "$json" "$WEBHOOK"
 
       - name: Notify on PR merged
@@ -68,10 +64,6 @@ jobs:
               content="$content\n$l"
             fi
           done
-          # Build JSON payload using a heredoc to avoid complex escaping.
-          json=$(cat <<'JSON'
-            {"content":"%s"}
-            JSON
-          )
-          json=$(printf "%s" "$json" "${content}")
+          # Build JSON payload using python to ensure proper escaping.
+          json=$(python -c "import json,sys; print(json.dumps({'content': sys.argv[1]}))" "${content}")
           curl -s -H "Content-Type: application/json" -d "$json" "$WEBHOOK"

@@ -40,14 +40,12 @@ jobs:
             const title = `Auto PR from ${head}`;
             const body = `This pull request was automatically created from branch **${head}**.`;
 
-            // If caller provided a PR_TOKEN (PAT), prefer it by creating a
-            // new Octokit instance authenticated with that token. This is an
-            // opt-in behavior (PR_TOKEN must be set in repository secrets).
-            let oct = client;
-            if (process.env.PR_TOKEN) {
-              const { Octokit } = require('@octokit/rest');
-              oct = new Octokit({ auth: process.env.PR_TOKEN });
-            }
+            // The 'github' object provided to the action is an authenticated
+            // Octokit client. For most repos it's sufficient and avoids the
+            // need to require additional modules at runtime. If you set
+            // PR_TOKEN it will not automatically be used here — opt-in code
+            // could be added if you need a PAT specifically.
+            const oct = client;
 
             // Check for an existing open PR from this branch
             const existing = await oct.pulls.list({
