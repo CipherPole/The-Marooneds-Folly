@@ -1,4 +1,3 @@
----
 name: Auto-create PR for feature branches
 
 on:
@@ -9,65 +8,10 @@ on:
 jobs:
   create_pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - name: Placeholder
+        run: echo "auto-create-pr placeholder"
 
-      - name: Create or update PR
-        uses: actions/github-script@v7
-        env:
-          PR_TOKEN: ${{ secrets.PR_TOKEN }}
-        with:
-          # Provide github.token so the action has a usable token. The
-          # script will use the provided authenticated client by default.
-          # If you set PR_TOKEN (a PAT) you can opt-in to using it.
-          github-token: ${{ github.token }}
-          script: |
-            // Use the action-provided client by default (already authenticated
-            // with the token passed via 'github-token'). This avoids requiring
-            // external modules in most cases.
-            const client = github;
 
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const head = context.ref.replace('refs/heads/', '');
-            const base = 'main';
-            const title = `Auto PR from ${head}`;
-            const body = `This pull request was automatically created from branch **${head}**.`;
 
-            // The 'github' object provided to the action is an authenticated
-            // Octokit client. For most repos it's sufficient and avoids the
-            // need to require additional modules at runtime. If you set
-            // PR_TOKEN it will not automatically be used here — opt-in code
-            // could be added if you need a PAT specifically.
-            const oct = client;
-
-            // Check for an existing open PR from this branch
-            const existing = await oct.pulls.list({
-              owner,
-              repo,
-              head: `${owner}:${head}`,
-              base,
-              state: 'open',
-            });
-
-            if (existing.data && existing.data.length > 0) {
-              console.log(`Found existing PR: ${existing.data[0].html_url}`);
-              return existing.data[0].html_url;
-            }
-
-            const pr = await oct.pulls.create({
-              owner,
-              repo,
-              head,
-              base,
-              title,
-              body,
-            });
-
-            console.log(`Created PR: ${pr.data.html_url}`);
-            return pr.data.html_url;

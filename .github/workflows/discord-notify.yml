@@ -6,26 +6,17 @@ on:
     branches:
       - '**'
   pull_request:
-    types: [closed]
+    types:
+      - closed
 
 jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Notify on push
+      - name: Notify on push (placeholder)
         if: github.event_name == 'push'
-        env:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        run: bash ./.github/scripts/discord_notify.sh push
+        run: echo "discord-notify placeholder for push"
 
-      - name: Notify on PR merged
-        # Trigger only when a pull request was merged. Keep this concise to
-        # avoid yamllint's line-length warnings.
+      - name: Notify on PR merged (placeholder)
         if: github.event.pull_request.merged == true
-        env:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_USER: ${{ github.event.pull_request.user.login }}
-          MERGED_BY: ${{ github.event.pull_request.merged_by.login }}
-        run: bash ./.github/scripts/discord_notify.sh pr_merged
+        run: echo "discord-notify placeholder for pr_merged"
