@@ -1,0 +1,19 @@
+---
+name: CI Build (placeholder)
+
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Placeholder step
+        run: |
+          echo "CI build placeholder: no build configured yet"

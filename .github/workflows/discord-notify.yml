@@ -20,7 +20,7 @@ jobs:
           ref=${GITHUB_REF#refs/heads/}
           commit_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA}"
           # Build message lines in an array then join to avoid YAML parsing issues.
-          lines=("**Update** in ${GITHUB_REPOSITORY}" "Branch: \\`${ref}\\`" "Pusher: ${GITHUB_ACTOR}" "Commit: <${commit_url}>")
+          lines=("**Update** in ${GITHUB_REPOSITORY}" "Branch: '${ref}'" "Pusher: ${GITHUB_ACTOR}" "Commit: <${commit_url}>")
           content=""
           for l in "${lines[@]}"; do
             if [ -z "$content" ]; then
