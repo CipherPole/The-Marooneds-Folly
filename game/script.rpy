@@ -5,7 +5,7 @@
 
 define e = Character("Eileen")
 
-
+# TODO We need to add in the story blocks and placeholder screens
 # The game starts here.
 
 label start:
