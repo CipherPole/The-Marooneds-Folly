@@ -195,7 +195,7 @@ style input:
     xalign gui.dialogue_text_xalign
     xmaximum gui.dialogue_width
 
-
+# TODO: need to add in more choice options
 ## Choice screen ###############################################################
 ##
 ## This screen is used to display the in-game choices presented by the menu
