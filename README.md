@@ -1,104 +1,30 @@
-
 # The Marooned's Folly
 
-A short, clear README for this Ren'Py visual novel project. The repository contains the game's Ren'Py scripts, UI assets, audio, and localization.
+A short README for this Ren'Py visual novel project. This repository contains the game's Ren'Py scripts, UI assets, audio, and localization.
 
-Overview
-- `game/` — Ren'Py scripts (.rpy), translation files, and other source assets used by the engine.
-- `gui/`, `audio/`, `images/` — artwork and media used by the project.
+## Overview
 
-Quick start (Windows PowerShell)
-1. Install Git if needed: https://git-scm.com/downloads
-2. Open PowerShell and change to the project folder:
+This repository contains the Ren'Py source for the game: scripts, UI artwork, audio, and localization files.
+
+### Key folders
+
+- `game/` — Ren'Py scripts (.rpy), translations, and other source files.
+- `gui/`, `audio/`, `images/` — UI artwork, sounds, and image assets.
+
+## Quick start (Windows PowerShell)
+
+Prerequisites:
+- Ren'Py: see the Ren'Py website: [Ren'Py](https://www.renpy.org/).
+- Git: [Git downloads](https://git-scm.com/downloads).
+- (Optional) GitHub CLI: [GitHub CLI](https://cli.github.com/).
+
+Open PowerShell and run:
 
 ```powershell
 cd "e:\renpy-8.4.1-sdk\The-Marooneds-Folly"
 ```
 
-3. If this is a new repository, initialize and push to GitHub:
-
-```powershell
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/<username>/<repo>.git
-git branch -M main
-git push -u origin main
-```
-
-Or create & push with the GitHub CLI:
-
-```powershell
-gh repo create <username>/<repo> --public --source=. --remote=origin --push
-```
-
-Run & build (details)
-- For detailed run and build instructions see `docs/BUILD.md`. It includes PowerShell commands to launch the game from the Ren'Py SDK and to build distributables.
-
-Collaboration
-- Clone the repo: `git clone https://github.com/<username>/<repo>.git`
-- Keep `main` up to date: `git checkout main ; git pull origin main`
-- Work in short-lived feature branches. Recommended naming:
-   - `feature/<short-description>` for new features
-   - `fix/<short-description>` for bug fixes
-   - `wip/<topic>` for work-in-progress
-
-Example feature flow (PowerShell):
-
-```powershell
-git checkout -b feature/my-feature
-# make changes
-git add .
-git commit -m "Add: short description of change"
-git push -u origin feature/my-feature
-```
-
-- Open a Pull Request on GitHub and request reviews. Describe what changed, how to test, and link related issues.
-
-Automation in this repository
-- Pushing a branch named `feature/**` will automatically create a PR targeting `main` if one does not already exist.
-- Applying the label `automerge` to a PR will trigger the auto-merge workflow (squash-merge) when checks and reviews pass.
-- If automation fails due to permission restrictions, a maintainer can add a Personal Access Token (PAT) with `repo` scope as a repository secret named `PR_TOKEN` to enable the workflows.
-
-Security & publishing notes
-- Don't commit large compiled outputs or exported binaries. Add them to `.gitignore` or use Git LFS for big files.
-- Never commit secrets, API keys, or credentials. Grep `game/options.rpy` and other config files if you're unsure.
-
-Help & next steps
-- I added `docs/BUILD.md` with step-by-step run/build steps.
-- I can also add a `CONTRIBUTING.md` (branch/PR guidelines and automation notes) if you'd like — or open a PR that commits these updates for you.
-
-Thank you for contributing — open an issue or a draft PR if you want guidance on where to start.
-
-Automation (what's included)
-- Pushing a branch named `feature/**` will create a PR automatically.
-- Label a PR `automerge` to have it automatically squash-merged.
-
-Security & publishing notes
-- Do not commit large build outputs or exported binaries. Add them to `.gitignore`.
-- Do not commit secrets or API keys. Search `game/options.rpy` and other config files for hard-coded credentials.
-
-If GitHub Actions cannot create or merge PRs because of permission restrictions, add a Personal Access Token (PAT) named `PR_TOKEN` in repository secrets:
-1. Create a PAT with `repo` scope: https://github.com/settings/tokens/new
-# The Marooned's Folly
-
-A short, clear README for this Ren'Py visual novel project. The repository contains the game's Ren'Py scripts, UI assets, audio, and localization.
-
-Overview
-
-- `game/` — Ren'Py scripts (.rpy), translation files, and other source assets used by the engine.
-- `gui/`, `audio/`, `images/` — artwork and media used by the project.
-
-Quick start (Windows PowerShell)
-
-1. Install Git if needed: [Git downloads](https://git-scm.com/downloads).
-2. Open PowerShell and change to the project folder:
-
-```powershell
-cd "e:\renpy-8.4.1-sdk\The-Marooneds-Folly"
-```
-
-3. If this is a new repository, initialize and push to GitHub:
+If this is a new repository, initialize and push to GitHub:
 
 ```powershell
 git init
@@ -109,23 +35,21 @@ git branch -M main
 git push -u origin main
 ```
 
-Or create & push with the GitHub CLI:
+Or create and push with the GitHub CLI:
 
 ```powershell
 gh repo create <username>/<repository> --public --source=. --remote=origin --push
 ```
 
-Run & build (details)
+For detailed run and build instructions, see `docs/BUILD.md`.
 
-- For detailed run and build instructions see `docs/BUILD.md`. It includes PowerShell commands to launch the game from the Ren'Py SDK and to build distributables.
-
-Collaboration
+## Collaboration
 
 - Clone the repository: `git clone https://github.com/<username>/<repository>.git`.
-- Keep `main` up to date: `git checkout main ; git pull origin main`.
-- Work in short-lived feature branches. Recommended naming:
+- Keep `main` up to date: `git checkout main; git pull origin main`.
+- Work in short-lived feature branches. Suggested naming:
   - `feature/<short-description>` for new features
-  - `fix/<short-description>` for bug fixes
+  - `fix/<short-description>` for bugfixes
   - `wip/<topic>` for work-in-progress
 
 Example feature flow (PowerShell):
@@ -138,345 +62,30 @@ git commit -m "Add: short description of change"
 git push -u origin feature/my-feature
 ```
 
-- Open a Pull Request on GitHub and request reviews. Describe what changed, how to test, and link related issues.
+Open a Pull Request on GitHub and request reviews. Describe what changed, how to test, and link related issues.
 
-Automation in this repository
+## Automation in this repository
 
-- Pushing a branch named `feature/**` will automatically create a PR targeting `main` if one does not already exist.
+- Pushing a branch named `feature/**` will create a PR targeting `main` if one does not already exist.
 - Applying the label `automerge` to a PR will trigger the auto-merge workflow (squash-merge) when checks and reviews pass.
 
-Security & publishing notes
+If automation fails due to permission restrictions, a repository maintainer can add a Personal Access Token (PAT) with `repo` scope as a repository secret named `PR_TOKEN` to enable the workflows. See GitHub: [Create a personal access token](https://github.com/settings/tokens).
 
-- Don't commit large compiled outputs or exported binaries. Add them to `.gitignore` or use Git LFS for big files.
-- Never commit secrets, API keys, or credentials. Grep `game/options.rpy` and other config files if you're unsure.
+## Security & publishing notes
 
-Help & next steps
+- Do not commit large built outputs or exported binaries. Add them to `.gitignore` or use Git LFS for large files.
+- Never commit secrets, API keys, or credentials.
 
-- I added `docs/BUILD.md` with step-by-step run/build steps.
-- I can also add a `CONTRIBUTING.md` (branch/PR guidelines and automation notes) if you'd like — or open a PR that commits these updates for you.
+## Discord notifications
 
-Thank you for contributing — open an issue or a draft PR if you want guidance on where to start.
+You can enable Discord notifications by adding a repository secret named `DISCORD_WEBHOOK` (Settings → Secrets and variables → Actions → New repository secret) and pasting the webhook URL as the value. The `discord-notify.yml` workflow will post updates when pushes or merges occur.
 
-If GitHub Actions cannot create or merge PRs because of permission restrictions, add a Personal Access Token (PAT) named `PR_TOKEN` in repository secrets:
+## What I can do next
 
-1. Create a PAT with `repo` scope: https://github.com/settings/tokens/new
-2. In GitHub: Settings → Secrets and variables → Actions → New repository secret
-   - Name: `PR_TOKEN`
-   - Value: (paste your PAT)
-
-What I can do next
-
-- Commit this README update to your branch.
-- Add Ren'Py run/build instructions to the README.
-- Create a `CONTRIBUTING.md` with branch and PR guidelines.
-
-Which would you like me to do next?
-If the game is broken or unstable, you can fall back to a known working branch by cloning the following branch:
-
-```powershell
-git clone https://github.com/CipherPole/The-Marooneds-Folly.git -b feature/test-auto
-```
-
-This will clone the repository and check out the `feature/test-auto` branch, which is intended as a stable fallback.
-=======
-Prerequisites
--------------
-
-- Ren'Py: Download and install Ren'Py to run the game locally: https://www.renpy.org/
-- Git: Install Git to clone, push, and collaborate: https://git-scm.com/downloads
-- (Optional) GitHub CLI: https://cli.github.com/
-
-Make sure Ren'Py is installed before attempting to run the project—open the Ren'Py launcher, add this folder as a project (or point it at the parent folder), and run.
-
-What's included
-main
-
-Quick start (Windows PowerShell)
-1. Install Git if needed: https://git-scm.com/downloads
-2. Open PowerShell and go to the project folder:
-
-```powershell
-cd "e:\renpy-8.4.1-sdk\The-Marooneds-Folly"
-```
-
-3. If this is a new repository, initialize and push to GitHub:
-
-```powershell
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/<username>/<repo>.git
-git branch -M main
-git push -u origin main
-```
-
-Alternative: create and push with GitHub CLI:
-
-```powershell
-gh repo create <username>/<repo> --public --source=. --remote=origin --push
-```
-
-Collaboration basics
-- Clone: `git clone https://github.com/<username>/<repo>.git`
-- Update main: `git checkout main ; git pull origin main`
-- Create a feature branch and push:
-
-```powershell
-git checkout -b feature/my-feature
-# make changes
-git add .
-git commit -m "Add my feature"
-git push -u origin feature/my-feature
-```
-
-- Open a Pull Request on GitHub and request reviews before merging.
-
-Automation in this repo
-- Pushing a branch named `feature/**` triggers a workflow that creates a PR targeting `main`.
-- Label a PR `automerge` to automatically squash-merge it.
-
-Security & publishing notes
-- Do not commit large build outputs or exported binaries. Add them to `.gitignore`.
-- Do not commit secrets or API keys. Search `game/options.rpy` and other config files for hard-coded credentials.
-
-If automatic PR creation or merging fails due to permissions, add a Personal Access Token (PAT) named `PR_TOKEN` in repository secrets:
-
-1. Create a PAT with `repo` scope: https://github.com/settings/tokens/new
-2. In GitHub: Settings → Secrets and variables → Actions → New repository secret
-   - Name: `PR_TOKEN`
-   - Value: (paste your PAT)
-
-Next actions I can do for you
-- Commit this README change to your branch (I can run that for you).
+- Commit this README change to your branch (I can do that for you).
 - Expand the README with Ren'Py-specific run and build steps.
-- Add a `CONTRIBUTING.md` with branch/PR guidelines.
+- Add a `CONTRIBUTING.md` with branch and PR guidelines.
 
-Which of the above would you like next?
-# The Marooned's Folly
-
-A short, clear README for the Ren'Py visual novel project.
-
-Overview
-- This repository contains the game's Ren'Py source: scripts, assets, and localization.
-
-Key folders
-- `game/` — Ren'Py scripts (.rpy), translations, and other source files.
-- `gui/`, `audio/`, `images/` — UI art, sounds, and image assets.
-
-Quick start (Windows PowerShell)
-1. Install Git if needed: https://git-scm.com/downloads
-2. Open PowerShell and go to the project folder:
-
-```powershell
-cd "e:\renpy-8.4.1-sdk\The-Marooneds-Folly"
-```
-
-3. If this is a new repository, initialize and push to GitHub:
-
-```powershell
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/<username>/<repo>.git
-git branch -M main
-git push -u origin main
-```
-
-Alternative: create and push with GitHub CLI:
-
-```powershell
-gh repo create <username>/<repo> --public --source=. --remote=origin --push
-```
-
-Collaboration basics
-- Clone: `git clone https://github.com/<username>/<repo>.git`
-- Update main: `git checkout main ; git pull origin main`
-- Create a feature branch and push:
-
-```powershell
-git checkout -b feature/my-feature
-# make changes
-git add .
-git commit -m "Add my feature"
-git push -u origin feature/my-feature
-```
-
-- Open a Pull Request on GitHub and request reviews before merging.
-
-Automation in this repo
-- Pushing a branch named `feature/**` triggers a workflow that creates a PR targeting `main`.
-- Label a PR `automerge` to automatically squash-merge it.
-
-Security & publishing notes
-- Do not commit large build outputs or exported binaries. Add them to `.gitignore`.
-- Do not commit secrets or API keys. Search `game/options.rpy` and other config files for hard-coded credentials.
-
-If automatic PR creation or merging fails due to permissions, add a Personal Access Token (PAT) named `PR_TOKEN` in repository secrets:
-
-1. Create a PAT with `repo` scope: https://github.com/settings/tokens/new
-2. In GitHub: Settings → Secrets and variables → Actions → New repository secret
-   - Name: `PR_TOKEN`
-   - Value: (paste your PAT)
-
-Next actions I can do for you
-- Commit this README change to your branch (I can run that for you).
-- Expand the README with Ren'Py-specific run and build steps.
-- Add a `CONTRIBUTING.md` with branch/PR guidelines.
-
-Which of the above would you like next?
-# The Marooned's Folly
-
-A short, clear README for the Ren'Py visual novel project.
-
-Overview
-- This repository contains the game's Ren'Py source: scripts, assets, and localization.
-
-Key folders
-- `game/` — Ren'Py scripts (.rpy), translations, and other source files.
-- `gui/`, `audio/`, `images/` — UI art, sounds, and image assets.
-
-Quick start (Windows PowerShell)
-1. Install Git if needed: https://git-scm.com/downloads
-2. Open PowerShell and go to the project folder:
-
-```powershell
-cd "e:\renpy-8.4.1-sdk\The-Marooneds-Folly"
-```
-
-3. If this is a new repository, initialize and push to GitHub:
-
-```powershell
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/<username>/<repo>.git
-git branch -M main
-git push -u origin main
-```
-
-Alternative: create and push with GitHub CLI:
-
-```powershell
-gh repo create <username>/<repo> --public --source=. --remote=origin --push
-```
-
-Collaboration basics
-- Clone: `git clone https://github.com/<username>/<repo>.git`
-- Update main: `git checkout main ; git pull origin main`
-- Create a feature branch and push:
-
-```powershell
-git checkout -b feature/my-feature
-# make changes
-git add .
-git commit -m "Add my feature"
-git push -u origin feature/my-feature
-```
-
-- Open a Pull Request on GitHub and request reviews before merging.
-
-Automation in this repo
-- Pushing a branch named `feature/**` triggers a workflow that creates a PR targeting `main`.
-- Label a PR `automerge` to automatically squash-merge it.
-
-Security & publishing notes
-- Do not commit large build outputs or exported binaries. Add them to `.gitignore`.
-- Do not commit secrets or API keys. Search `game/options.rpy` and other config files for hard-coded credentials.
-
-If automatic PR creation or merging fails due to permissions, add a Personal Access Token (PAT) named `PR_TOKEN` in repository secrets:
-
-1. Create a PAT with `repo` scope: https://github.com/settings/tokens/new
-2. In GitHub: Settings → Secrets and variables → Actions → New repository secret
-   - Name: `PR_TOKEN`
-   - Value: (paste your PAT)
-
-Next actions I can do for you
-- Commit this README change to your branch (I can run that for you).
-- Expand the README with Ren'Py-specific run and build steps.
-- Add a `CONTRIBUTING.md` with branch/PR guidelines.
-
-Which of the above would you like next?
-# The Marooned's Folly
-
-This repository contains the source for a Ren'Py visual novel: scripts, assets, and localization.
-
-Overview
-- `game/`: Ren'Py scripts (.rpy), translations, and other game source files.
-- `gui/`, `audio/`, `images/`: UI art, sounds, and images.
-
-Quick start (PowerShell)
-1. Install Git if needed: https://git-scm.com/downloads
-2. Open PowerShell and change to this folder:
-
-```powershell
-cd "e:\renpy-8.4.1-sdk\The-Marooneds-Folly"
-```
-
-3. If you're creating a new remote repo, initialize and push:
-
-```powershell
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/<username>/<repo>.git
-git branch -M main
-git push -u origin main
-```
-
-Or use GitHub CLI to create & push in one step:
-
-```powershell
-gh repo create <username>/<repo> --public --source=. --remote=origin --push
-```
-
-Collaboration essentials
-- Clone: `git clone https://github.com/<username>/<repo>.git`
-- Keep main updated: `git checkout main ; git pull origin main`
-- Work in feature branches:
-
-```powershell
-git checkout -b feature/short-description
-# make changes
-git add .
-git commit -m "Short description"
-git push -u origin feature/short-description
-```
-
-- Open a Pull Request on GitHub for review before merging.
-
-Automation (what's included)
-- Pushing a branch named `feature/**` will create a PR automatically.
-- Label a PR `automerge` to have it automatically squash-merged.
-
-Security & publishing notes
-- Do not commit large build outputs or exported binaries. Add them to `.gitignore`.
-- Do not commit secrets or API keys. Search `game/options.rpy` and other config files for hard-coded credentials.
-
-If GitHub Actions cannot create or merge PRs because of permission restrictions, add a Personal Access Token (PAT) named `PR_TOKEN` in repository secrets:
-1. Create a PAT with `repo` scope: https://github.com/settings/tokens/new
-2. In GitHub: Settings → Secrets and variables → Actions → New repository secret
-   - Name: `PR_TOKEN`
-   - Value: (paste your PAT)
-
-What I can do next
-- Commit this README update to your branch.
-- Add Ren'Py run/build instructions to the README.
-- Create a `CONTRIBUTING.md` with branch and PR guidelines.
-
-Which would you like me to do next?
-
-### Discord notifications
-
-You can receive repository notifications in Discord. To enable this, add a repository secret named `DISCORD_WEBHOOK` (Settings → Secrets and variables → Actions → New repository secret) and paste the webhook URL as the value.
-
-The repository includes a workflow `discord-notify.yml` which will post messages to that webhook when:
-- a push happens on any branch (reports branch, author and commit link)
-- a pull request is merged (reports title, author, merged by, and PR link)
-
-Note: For security, add the webhook as a secret rather than placing it directly in the repo. If you'd like, I can add the webhook secret for you if you paste the webhook here (but keep in mind chat is not a secure channel; it's safer to add it manually in the GitHub UI).
-
-Update checker notes:
-- The game now performs a light-weight check of the `main` branch at startup and will notify players non-intrusively if a new commit is detected.
-- The last-seen SHA is stored in `.last_main_sha`, which is ignored by `.gitignore` so it won't be committed.
+If you'd like me to proceed, tell me which item above to run next and I will commit and push the change to the markdown-fixes branch so Super-Linter can re-run.
 
 
