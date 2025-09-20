@@ -1,3 +1,4 @@
+---
 name: Auto-create PR for feature branches
 
 on:
@@ -20,15 +21,17 @@ jobs:
         uses: actions/github-script@v7
         env:
           PR_TOKEN: ${{ secrets.PR_TOKEN }}
-          GITHUB_TOKEN: ${{ github.token }}
         with:
+          # Provide github.token so the action has a usable token. The script
+          # will use the provided authenticated client (github.rest) by
+          # default. If a PR_TOKEN (PAT) is provided in the environment we
+          # create a separate Octokit instance authenticated with it.
           github-token: ${{ github.token }}
           script: |
-            const { Octokit } = require('@octokit/rest');
-
-            // Use PR_TOKEN (PAT) if provided, otherwise fall back to GITHUB_TOKEN.
-            const token = process.env.PR_TOKEN || process.env.GITHUB_TOKEN;
-            const oct = new Octokit({ auth: token });
+            // Use the action-provided client by default (already authenticated
+            // with the token passed via 'github-token'). This avoids requiring
+            // external modules in most cases.
+            const client = github;
 
             const owner = context.repo.owner;
             const repo = context.repo.repo;
@@ -36,6 +39,15 @@ jobs:
             const base = 'main';
             const title = `Auto PR from ${head}`;
             const body = `This pull request was automatically created from branch **${head}**.`;
+
+            // If caller provided a PR_TOKEN (PAT), prefer it by creating a
+            // new Octokit instance authenticated with that token. This is an
+            // opt-in behavior (PR_TOKEN must be set in repository secrets).
+            let oct = client;
+            if (process.env.PR_TOKEN) {
+              const { Octokit } = require('@octokit/rest');
+              oct = new Octokit({ auth: process.env.PR_TOKEN });
+            }
 
             // Check for an existing open PR from this branch
             const existing = await oct.pulls.list({
