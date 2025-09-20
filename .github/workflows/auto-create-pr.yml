@@ -22,10 +22,9 @@ jobs:
         env:
           PR_TOKEN: ${{ secrets.PR_TOKEN }}
         with:
-          # Provide github.token so the action has a usable token. The script
-          # will use the provided authenticated client (github.rest) by
-          # default. If a PR_TOKEN (PAT) is provided in the environment we
-          # create a separate Octokit instance authenticated with it.
+          # Provide github.token so the action has a usable token. The
+          # script will use the provided authenticated client by default.
+          # If you set PR_TOKEN (a PAT) you can opt-in to using it.
           github-token: ${{ github.token }}
           script: |
             // Use the action-provided client by default (already authenticated
