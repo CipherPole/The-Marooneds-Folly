@@ -18,7 +18,9 @@ jobs:
       - name: Run Super-Linter
         uses: github/super-linter@v4
         env:
-          VALIDATE_ALL_CODEBASE: false
+          # Temporarily enable full-codebase validation so we can gather a
+          # comprehensive list of linter issues. Revert this after triage.
+          VALIDATE_ALL_CODEBASE: true
           DEFAULT_WORKSPACE: .
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Exclude game assets, cache, and saves which are not source code:

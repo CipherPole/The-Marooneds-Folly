@@ -1,3 +1,4 @@
+---
 name: Discord notifications
 
 on:
@@ -18,7 +19,9 @@ jobs:
         run: bash ./.github/scripts/discord_notify.sh push
 
       - name: Notify on PR merged
-        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+        # Trigger only when a pull request was merged. Keep this concise to
+        # avoid yamllint's line-length warnings.
+        if: github.event.pull_request.merged == true
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
