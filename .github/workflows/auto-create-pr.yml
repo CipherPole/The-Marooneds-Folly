@@ -1,4 +1,3 @@
----
 name: Auto-create PR for feature branches
 
 on:
@@ -23,15 +22,11 @@ jobs:
           PR_TOKEN: ${{ secrets.PR_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
         with:
-          # We still provide github.token here so the action has a token available.
           github-token: ${{ github.token }}
           script: |
             const { Octokit } = require('@octokit/rest');
 
-            // Prefer a PAT provided via PR_TOKEN, otherwise fall back to the
-            // repository-scoped GITHUB_TOKEN. Reading the secret via env avoids
-            // using secrets in YAML expressions which some linters/validators
-            // flag as invalid context access.
+            // Use PR_TOKEN (PAT) if provided, otherwise fall back to GITHUB_TOKEN.
             const token = process.env.PR_TOKEN || process.env.GITHUB_TOKEN;
             const oct = new Octokit({ auth: token });
 
@@ -42,7 +37,7 @@ jobs:
             const title = `Auto PR from ${head}`;
             const body = `This pull request was automatically created from branch **${head}**.`;
 
-            // Check for existing open PR from this head
+            // Check for an existing open PR from this branch
             const existing = await oct.pulls.list({
               owner,
               repo,
@@ -52,7 +47,7 @@ jobs:
             });
 
             if (existing.data && existing.data.length > 0) {
-              core.info(`Found existing PR: ${existing.data[0].html_url}`);
+              console.log(`Found existing PR: ${existing.data[0].html_url}`);
               return existing.data[0].html_url;
             }
 
@@ -65,5 +60,5 @@ jobs:
               body,
             });
 
-            core.info(`Created PR: ${pr.data.html_url}`);
+            console.log(`Created PR: ${pr.data.html_url}`);
             return pr.data.html_url;
