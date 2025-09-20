@@ -8,6 +8,8 @@ define e = Character("Eileen")
 # TODO We need to add in the story blocks and placeholder screens
 # The game starts here.
 
+image intro_video = Movie(play="intro_video.ogv",  size=(1280,720), loop=True, xalign=0.10, yalign=0.10)
+
 label start:
 
     # Stop any menu music (fade out) so it doesn't continue into gameplay.
@@ -24,10 +26,13 @@ label start:
     # directory.
 
     show eileen happy
-
     # These display lines of dialogue.
 
     e "You've created a new Ren'Py game."
+
+    # calls the intro intro_VideoS
+    show intro_video behind eileen
+
 
     e "Once you add a story, pictures, and music, you can release it to the world!"
 
