@@ -20,7 +20,7 @@ define config.name = _("The Marooneds Folly")
 
 define gui.show_name = True
 
-
+# [ ] TODO We need to define the game version
 ## The version of the game.
 
 define config.version = "1.0"
@@ -29,6 +29,7 @@ define config.version = "1.0"
 ## Text that is placed on the game's about screen. Place the text between the
 ## triple-quotes, and leave a blank line between paragraphs.
 
+# TODO [ ] We need to setup the about game section
 define gui.about = _p("""
 """)
 
@@ -37,6 +38,7 @@ define gui.about = _p("""
 ## distribution. This must be ASCII-only, and must not contain spaces, colons,
 ## or semicolons.
 
+# TODO [ ] We need to name the game
 define build.name = "TheMaroonedsFolly"
 
 
@@ -49,6 +51,7 @@ define build.name = "TheMaroonedsFolly"
 define config.has_sound = True
 define config.has_music = True
 define config.has_voice = True
+define config.auto_voice = "voice/{id}.ogg"
 
 
 ## To allow the user to play a test sound on the sound or voice channel,
@@ -62,6 +65,7 @@ define config.has_voice = True
 ## the player is at the main menu. This file will continue playing into the
 ## game, until it is stopped or another file is played.
 
+# TODO [ ] We need to define the main menu theme music
 define config.main_menu_music = "main-menu-theme.mp3"
 
 
